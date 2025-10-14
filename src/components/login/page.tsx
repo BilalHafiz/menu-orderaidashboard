@@ -4,7 +4,6 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import {
-  FaBolt,
   FaUser,
   FaShieldAlt,
   FaBullseye,
@@ -131,7 +130,6 @@ export default function LoginPage() {
               className="w-full text-white py-3 px-4 rounded-lg font-semibold focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-transparent transition-all duration-200 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
               style={{
                 background: "#7E946E",
-                focusRingColor: "#7E946E",
               }}
             >
               {isLoading ? (

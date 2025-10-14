@@ -21,3 +21,13 @@ node_modules
 .build-record.json.gz.part.7
 .build-record.json.gz.part.8
 .build-record.json.gz.part.9
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+.env.development
+.env.test
+.env.production
+.env
+.env.local
+.env.development.local

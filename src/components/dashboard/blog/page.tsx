@@ -10,7 +10,6 @@ import {
   FaTag,
   FaRocket,
   FaList,
-  FaPlus,
 } from "react-icons/fa";
 import {
   getCategories,
@@ -663,7 +662,7 @@ export default function BlogPage() {
                     />
                     <label
                       htmlFor="image-upload"
-                      className="inline-block px-4 py-2 bg-indigo-600 text-white text-sm rounded-md hover:bg-indigo-700 cursor-pointer flex items-center gap-2"
+                      className="px-4 py-2 bg-indigo-600 text-white text-sm rounded-md hover:bg-indigo-700 cursor-pointer flex items-center gap-2"
                     >
                       Choose Image
                     </label>

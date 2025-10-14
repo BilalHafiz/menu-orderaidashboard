@@ -28,6 +28,7 @@ export async function GET() {
       slug: string;
       title: string;
       status: string;
+      created_at: string;
     }
 
     const transformed = (data || []).map((post: Post) => ({
@@ -35,7 +36,7 @@ export async function GET() {
       slug: post.slug,
       title: post.title,
       status: post.status,
-      createdAt: post.createdAt,
+      createdAt: post.created_at,
     }));
 
     console.log("Transformed data:", transformed);

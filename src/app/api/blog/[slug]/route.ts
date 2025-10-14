@@ -2,12 +2,47 @@ import { NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
 
 interface RouteParams {
-  params: { slug: string };
+  params: Promise<{ slug: string }>;
+}
+
+interface Category {
+  id: string;
+  name: string;
+}
+
+interface Tag {
+  id: string;
+  name: string;
+  slug: string;
+  color: string;
+}
+
+interface BlogPostTag {
+  tags: Tag | Tag[];
+}
+
+interface BlogPost {
+  id: string;
+  title: string;
+  slug: string;
+  content: string;
+  excerpt: string;
+  featured_image: string | null;
+  meta_title: string | null;
+  meta_description: string | null;
+  status: string;
+  published_at: string | null;
+  created_at: string;
+  updated_at: string;
+  category_id: string | null;
+  author: string | null;
+  categories: Category | Category[] | null;
+  blog_post_tags: BlogPostTag[];
 }
 
 export async function GET(_request: Request, { params }: RouteParams) {
   try {
-    const { slug } = params;
+    const { slug } = await params;
     const { data, error } = await supabase
       .from("blog_posts")
       .select(
@@ -42,16 +77,16 @@ export async function GET(_request: Request, { params }: RouteParams) {
       );
     }
 
-    const post = data;
+    const post = data as BlogPost;
     const category = post.categories
       ? Array.isArray(post.categories)
         ? {
-            id: (post.categories as any[])[0]?.id ?? null,
-            name: (post.categories as any[])[0]?.name ?? null,
+            id: (post.categories as Category[])[0]?.id ?? null,
+            name: (post.categories as Category[])[0]?.name ?? null,
           }
         : {
-            id: (post.categories as any)?.id ?? null,
-            name: (post.categories as any)?.name ?? null,
+            id: (post.categories as Category)?.id ?? null,
+            name: (post.categories as Category)?.name ?? null,
           }
       : null;
     const transformed = {
@@ -68,7 +103,7 @@ export async function GET(_request: Request, { params }: RouteParams) {
         : null,
       tags: Array.isArray(post.blog_post_tags)
         ? post.blog_post_tags
-            .map((rel: any) => {
+            .map((rel: BlogPostTag) => {
               const t = Array.isArray(rel.tags) ? rel.tags[0] : rel.tags;
               return t
                 ? { id: t.id, name: t.name, slug: t.slug, color: t.color }

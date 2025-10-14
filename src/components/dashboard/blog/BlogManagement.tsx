@@ -15,7 +15,6 @@ import {
   FaTimes,
   FaSave,
   FaExternalLinkAlt,
-  FaPlus,
 } from "react-icons/fa";
 import {
   getBlogPosts,
@@ -81,99 +80,6 @@ export default function BlogManagement() {
   useEffect(() => {
     loadPosts();
   }, []);
-
-  // Table management functions
-  const addTable = () => {
-    const newTable = {
-      id: Date.now().toString(),
-      title: "",
-      headers: ["Column 1", "Column 2"],
-      rows: [["", ""]],
-    };
-    setEditTables([...editTables, newTable]);
-  };
-
-  const removeTable = (tableId: string) => {
-    setEditTables(editTables.filter((table) => table.id !== tableId));
-  };
-
-  const updateTable = (tableId: string, updates: Partial<TableData>) => {
-    setEditTables(
-      editTables.map((table) =>
-        table.id === tableId ? { ...table, ...updates } : table
-      )
-    );
-  };
-
-  const addTableRow = (tableId: string) => {
-    const table = editTables.find((t) => t.id === tableId);
-    if (table) {
-      updateTable(tableId, {
-        rows: [...table.rows, ["", ""]],
-      });
-    }
-  };
-
-  const removeTableRow = (tableId: string, rowIndex: number) => {
-    const table = editTables.find((t) => t.id === tableId);
-    if (table && table.rows.length > 1) {
-      updateTable(tableId, {
-        rows: table.rows.filter((_, index: number) => index !== rowIndex),
-      });
-    }
-  };
-
-  const updateTableRow = (
-    tableId: string,
-    rowIndex: number,
-    colIndex: number,
-    value: string
-  ) => {
-    const table = editTables.find((t) => t.id === tableId);
-    if (table) {
-      const newRows = [...table.rows];
-      newRows[rowIndex][colIndex] = value;
-      updateTable(tableId, { rows: newRows });
-    }
-  };
-
-  const addTableColumn = (tableId: string) => {
-    const table = editTables.find((t) => t.id === tableId);
-    if (table) {
-      const newHeaders = [
-        ...table.headers,
-        `Column ${table.headers.length + 1}`,
-      ];
-      const newRows = table.rows.map((row: string[]) => [...row, ""]);
-      updateTable(tableId, { headers: newHeaders, rows: newRows });
-    }
-  };
-
-  const removeTableColumn = (tableId: string, colIndex: number) => {
-    const table = editTables.find((t) => t.id === tableId);
-    if (table && table.headers.length > 1) {
-      const newHeaders = table.headers.filter(
-        (_, index: number) => index !== colIndex
-      );
-      const newRows = table.rows.map((row: string[]) =>
-        row.filter((_, index) => index !== colIndex)
-      );
-      updateTable(tableId, { headers: newHeaders, rows: newRows });
-    }
-  };
-
-  const updateTableHeader = (
-    tableId: string,
-    colIndex: number,
-    value: string
-  ) => {
-    const table = editTables.find((t) => t.id === tableId);
-    if (table) {
-      const newHeaders = [...table.headers];
-      newHeaders[colIndex] = value;
-      updateTable(tableId, { headers: newHeaders });
-    }
-  };
 
   const loadPosts = async () => {
     try {
