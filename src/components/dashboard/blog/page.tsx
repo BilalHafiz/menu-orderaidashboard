@@ -279,7 +279,7 @@ export default function BlogPage() {
                 id="title"
                 value={title}
                 onChange={handleTitleChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                className="w-full px-3 py-2 border text-black border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                 placeholder="Enter blog title..."
               />
             </div>
@@ -297,7 +297,7 @@ export default function BlogPage() {
                 id="slug"
                 value={slug}
                 onChange={(e) => setSlug(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                className="w-full px-3 py-2 border text-black border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                 placeholder="url-slug"
               />
             </div>
@@ -436,7 +436,7 @@ export default function BlogPage() {
                 value={content}
                 onChange={(e) => setContent(e.target.value)}
                 rows={20}
-                className="w-full px-3 py-2 border border-gray-300 border-t-0 rounded-b-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent resize-none"
+                className="w-full px-3 py-2 border text-black border-gray-300 border-t-0 rounded-b-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent resize-none"
                 placeholder="Write your blog content here"
                 style={{
                   fontSize: isLargeText ? "18px" : `${fontSize}px`,
@@ -462,7 +462,7 @@ export default function BlogPage() {
                 id="metaTitle"
                 value={metaTitle}
                 onChange={(e) => setMetaTitle(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                className="w-full px-3 py-2 border text-black border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                 placeholder="SEO meta title..."
                 maxLength={60}
               />
@@ -484,7 +484,7 @@ export default function BlogPage() {
                 value={metaDescription}
                 onChange={(e) => setMetaDescription(e.target.value)}
                 rows={4}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent resize-none"
+                className="w-full px-3 py-2 border text-black border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent resize-none"
                 placeholder="SEO meta description..."
                 maxLength={160}
               />
@@ -543,7 +543,7 @@ export default function BlogPage() {
                 id="author"
                 value={author}
                 onChange={(e) => setAuthor(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                className="w-full px-3 py-2 border text-black border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                 placeholder="Enter author name..."
               />
             </div>
@@ -560,7 +560,7 @@ export default function BlogPage() {
                 id="category"
                 value={category}
                 onChange={(e) => setCategory(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                className="w-full px-3 py-2 border text-black border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
               >
                 <option value="">Select a category</option>
                 {categories.map((cat) => (
