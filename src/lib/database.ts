@@ -396,8 +396,8 @@ export const updateBlogPost = async (
   try {
     console.log("Updating blog post:", id, updates);
 
-    // For status updates, use a simple approach
-    if (updates.status) {
+    // For status-only updates, use a simple approach
+    if (updates.status && Object.keys(updates).length === 1) {
       const { data, error } = await supabase
         .from("blog_posts")
         .update({ status: updates.status })
@@ -421,8 +421,12 @@ export const updateBlogPost = async (
     if (updates.slug !== undefined) cleanUpdates.slug = updates.slug;
     if (updates.content !== undefined) cleanUpdates.content = updates.content;
     if (updates.excerpt !== undefined) cleanUpdates.excerpt = updates.excerpt;
-    if (updates.featured_image !== undefined)
+    if (updates.featured_image !== undefined) {
+      console.log("Setting featured_image:", updates.featured_image);
+      console.log("Featured image type:", typeof updates.featured_image);
+      console.log("Featured image length:", updates.featured_image?.length);
       cleanUpdates.featured_image = updates.featured_image;
+    }
     if (updates.meta_title !== undefined)
       cleanUpdates.meta_title = updates.meta_title;
     if (updates.meta_description !== undefined)
@@ -435,6 +439,14 @@ export const updateBlogPost = async (
       cleanUpdates.published_at = updates.published_at;
 
     console.log("Clean updates:", cleanUpdates);
+    console.log(
+      "Number of fields to update:",
+      Object.keys(cleanUpdates).length
+    );
+    console.log(
+      "Featured image in clean updates:",
+      cleanUpdates.featured_image ? "PRESENT" : "MISSING"
+    );
 
     const { data, error } = await supabase
       .from("blog_posts")
@@ -445,10 +457,17 @@ export const updateBlogPost = async (
 
     if (error) {
       console.error("Supabase update error:", error);
+      console.error("Error details:", {
+        message: error.message,
+        details: error.details,
+        hint: error.hint,
+        code: error.code,
+      });
       throw new Error(`Update failed: ${error.message}`);
     }
 
     console.log("Update successful:", data);
+    console.log("Returned featured_image:", data.featured_image);
     return data;
   } catch (err: unknown) {
     const errorMessage =

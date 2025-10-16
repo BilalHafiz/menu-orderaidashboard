@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Image from "next/image";
 import {
   FaEdit,
   FaTrash,
@@ -15,12 +16,17 @@ import {
   FaTimes,
   FaSave,
   FaExternalLinkAlt,
+  FaImage,
+  FaFolder,
 } from "react-icons/fa";
 import {
   getBlogPosts,
   updateBlogPost,
   updateBlogPostStatus,
   deleteBlogPost,
+  getCategories,
+  getTags,
+  setBlogPostTags,
 } from "@/lib/database";
 
 interface TableData {
@@ -48,6 +54,9 @@ interface BlogPost {
   categories?: { name: string; slug: string } | null;
   tags_id?: string | null;
   tables?: TableData[] | null;
+  blog_post_tags?: Array<{
+    tags: { id: string; name: string; color?: string };
+  }>;
 }
 
 export default function BlogManagement() {
@@ -76,10 +85,81 @@ export default function BlogManagement() {
   >("draft");
   const [editTables, setEditTables] = useState<TableData[]>([]);
   const [editSaving, setEditSaving] = useState(false);
+  const [editFeaturedImage, setEditFeaturedImage] = useState("");
+  const [editCategoryId, setEditCategoryId] = useState("");
+  const [editTagIds, setEditTagIds] = useState<string[]>([]);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+
+  // Data for dropdowns
+  const [categories, setCategories] = useState<
+    Array<{ id: string; name: string; slug: string }>
+  >([]);
+  const [tags, setTags] = useState<
+    Array<{ id: string; name: string; slug: string }>
+  >([]);
 
   useEffect(() => {
     loadPosts();
+    loadCategoriesAndTags();
   }, []);
+
+  const loadCategoriesAndTags = async () => {
+    try {
+      const [categoriesData, tagsData] = await Promise.all([
+        getCategories(),
+        getTags(),
+      ]);
+      setCategories(categoriesData);
+      setTags(tagsData);
+    } catch (err) {
+      console.error("Error loading categories and tags:", err);
+    }
+  };
+
+  const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      // Validate file type
+      if (!file.type.startsWith("image/")) {
+        alert("Please select a valid image file");
+        return;
+      }
+
+      // Validate file size (max 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        alert("Image size should be less than 5MB");
+        return;
+      }
+
+      // Convert file to base64 for storage
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const base64String = e.target?.result as string;
+        setEditFeaturedImage(base64String);
+        setImagePreview(base64String);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const isValidImageUrl = (url: string) => {
+    try {
+      // Check if it's a base64 string
+      if (url.startsWith("data:image/")) {
+        return true;
+      }
+
+      // Check if it's a valid URL
+      const urlObj = new URL(url);
+      return (
+        urlObj.protocol === "http:" ||
+        urlObj.protocol === "https:" ||
+        url.startsWith("blob:")
+      );
+    } catch {
+      return false;
+    }
+  };
 
   const loadPosts = async () => {
     try {
@@ -146,6 +226,12 @@ export default function BlogManagement() {
 
   const handleEditPost = (post: BlogPost) => {
     console.log("Editing post with tables data:", post.tables);
+    console.log("Post featured_image:", post.featured_image);
+    console.log(
+      "Featured image type:",
+      post.featured_image?.startsWith("data:") ? "base64" : "URL"
+    );
+
     setSelectedPost(post);
     setEditTitle(post.title);
     setEditContent(post.content);
@@ -154,6 +240,17 @@ export default function BlogManagement() {
     setEditMetaDescription(post.meta_description || "");
     setEditStatus(post.status);
     setEditTables(post.tables || []);
+    setEditFeaturedImage(post.featured_image || "");
+    setImagePreview(post.featured_image || null);
+    setEditCategoryId(post.category_id || "");
+
+    // Extract tag IDs from the post's blog_post_tags
+    const tagIds =
+      post.blog_post_tags
+        ?.map((tagRelation) => tagRelation.tags?.id)
+        .filter(Boolean) || [];
+    setEditTagIds(tagIds);
+
     setShowEditModal(true);
   };
 
@@ -172,16 +269,25 @@ export default function BlogManagement() {
         meta_description: editMetaDescription.trim() || null,
         status: editStatus,
         tables: editTables.length > 0 ? editTables : null,
+        featured_image: editFeaturedImage.trim() || null,
+        category_id: editCategoryId || null,
       };
 
+      console.log("Saving post with updates:", updates);
+      console.log(
+        "Featured image type:",
+        editFeaturedImage.startsWith("data:") ? "base64" : "URL"
+      );
+      console.log("Featured image length:", editFeaturedImage.length);
+
+      // Update the blog post
       await updateBlogPost(selectedPost.id, updates);
 
-      // Update local state
-      setPosts((prev) =>
-        prev.map((post) =>
-          post.id === selectedPost.id ? { ...post, ...updates } : post
-        )
-      );
+      // Update tags separately
+      await setBlogPostTags(selectedPost.id, editTagIds);
+
+      // Reload posts to get fresh data from database
+      await loadPosts();
 
       alert("Post updated successfully!");
       setShowEditModal(false);
@@ -190,6 +296,7 @@ export default function BlogManagement() {
         err instanceof Error ? err.message : "Unknown error occurred";
       setError(errorMessage);
       console.error("Error updating post:", err);
+      alert(`Error: ${errorMessage}`);
     } finally {
       setEditSaving(false);
     }
@@ -388,6 +495,42 @@ export default function BlogManagement() {
                       </span>
                     </div>
 
+                    {/* Featured Image Indicator */}
+                    {post.featured_image && (
+                      <div className="mb-2 flex items-center gap-2">
+                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                          <FaImage className="w-3 h-3 mr-1" />
+                          {post.featured_image.startsWith("data:")
+                            ? "Uploaded Image"
+                            : "Image URL"}
+                        </span>
+                        <div className="w-12 h-8 rounded border overflow-hidden">
+                          {post.featured_image.startsWith("data:") ? (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img
+                              src={post.featured_image}
+                              alt="Featured image"
+                              className="w-full h-full object-cover"
+                              onError={(e) => {
+                                e.currentTarget.style.display = "none";
+                              }}
+                            />
+                          ) : (
+                            <Image
+                              src={post.featured_image}
+                              alt="Featured image"
+                              width={48}
+                              height={32}
+                              className="w-full h-full object-cover"
+                              onError={(e) => {
+                                e.currentTarget.style.display = "none";
+                              }}
+                            />
+                          )}
+                        </div>
+                      </div>
+                    )}
+
                     {/* Excerpt */}
                     <p className="text-black text-sm line-clamp-2">
                       {post.excerpt || post.content.substring(0, 150) + "..."}
@@ -562,7 +705,7 @@ export default function BlogManagement() {
             </div>
             <div className="p-6 overflow-y-auto max-h-[calc(90vh-120px)]">
               {error && (
-                <div className="mb-4 p-3 bg-green-100 border border-green-400 text-green-700 rounded">
+                <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
                   <strong>Error:</strong> {error}
                 </div>
               )}
@@ -612,6 +755,193 @@ export default function BlogManagement() {
                     <option value="published">Published</option>
                     <option value="archived">Archived</option>
                   </select>
+                </div>
+
+                {/* Featured Image */}
+                <div>
+                  <label className="block text-sm font-medium text-black mb-1">
+                    <FaImage className="inline w-4 h-4 mr-2" />
+                    Featured Image
+                  </label>
+
+                  {/* File Upload Option */}
+                  <div className="mb-3">
+                    <label className="block text-sm text-gray-600 mb-1">
+                      Upload from computer:
+                    </label>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleImageUpload}
+                      className="w-full px-3 py-2 text-black border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    />
+                    {editFeaturedImage.startsWith("data:") && (
+                      <p className="text-xs text-green-600 mt-1">
+                        ✓ Image uploaded successfully (will be saved to
+                        database)
+                      </p>
+                    )}
+                  </div>
+
+                  {/* URL Input Option */}
+                  <div className="mb-3">
+                    <label className="block text-sm text-gray-600 mb-1">
+                      Or enter image URL:
+                    </label>
+                    <input
+                      type="url"
+                      value={
+                        editFeaturedImage.startsWith("data:")
+                          ? ""
+                          : editFeaturedImage
+                      }
+                      onChange={(e) => {
+                        setEditFeaturedImage(e.target.value);
+                        if (isValidImageUrl(e.target.value)) {
+                          setImagePreview(e.target.value);
+                        }
+                      }}
+                      placeholder="https://example.com/image.jpg"
+                      className="w-full px-3 py-2 text-black border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    />
+                    {editFeaturedImage &&
+                      !editFeaturedImage.startsWith("data:") && (
+                        <p className="text-xs text-blue-600 mt-1">
+                          ✓ URL image (will be saved to database)
+                        </p>
+                      )}
+                  </div>
+
+                  {/* Image Preview */}
+                  {(imagePreview || editFeaturedImage) && (
+                    <div className="mt-2">
+                      <label className="block text-sm text-gray-600 mb-1">
+                        Preview:
+                      </label>
+                      <div className="relative">
+                        {(imagePreview || editFeaturedImage).startsWith(
+                          "data:"
+                        ) ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img
+                            src={imagePreview || editFeaturedImage}
+                            alt="Featured image preview"
+                            width={200}
+                            height={120}
+                            className="object-cover rounded border"
+                            onLoad={() => {
+                              console.log("Base64 image loaded successfully");
+                            }}
+                            onError={(e) => {
+                              console.error("Base64 image failed to load:", e);
+                              setImagePreview(null);
+                            }}
+                          />
+                        ) : (
+                          <Image
+                            src={imagePreview || editFeaturedImage}
+                            alt="Featured image preview"
+                            width={200}
+                            height={120}
+                            className="object-cover rounded border"
+                            onLoad={() => {
+                              console.log("URL image loaded successfully");
+                            }}
+                            onError={(e) => {
+                              console.error("URL image failed to load:", e);
+                              console.log(
+                                "Failed image src:",
+                                imagePreview || editFeaturedImage
+                              );
+                              setImagePreview(null);
+                            }}
+                          />
+                        )}
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setEditFeaturedImage("");
+                            setImagePreview(null);
+                          }}
+                          className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs hover:bg-red-600"
+                          title="Remove image"
+                        >
+                          ×
+                        </button>
+                      </div>
+                      <div className="mt-1 text-xs text-gray-500">
+                        Image source:{" "}
+                        {(imagePreview || editFeaturedImage).substring(0, 50)}
+                        ...
+                        <br />
+                        <span className="text-green-600">
+                          ✓ Image ready for save
+                        </span>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Category */}
+                <div>
+                  <label className="block text-sm font-medium text-black mb-1">
+                    <FaFolder className="inline w-4 h-4 mr-2" />
+                    Category
+                  </label>
+                  <select
+                    value={editCategoryId}
+                    onChange={(e) => setEditCategoryId(e.target.value)}
+                    className="w-full px-3 py-2 text-black border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  >
+                    <option value="">Select a category</option>
+                    {categories.map((category) => (
+                      <option key={category.id} value={category.id}>
+                        {category.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Tags */}
+                <div>
+                  <label className="block text-sm font-medium text-black mb-1">
+                    <FaTag className="inline w-4 h-4 mr-2" />
+                    Tags
+                  </label>
+                  <div className="space-y-2">
+                    {tags.map((tag) => (
+                      <label
+                        key={tag.id}
+                        className="flex items-center space-x-2"
+                      >
+                        <input
+                          type="checkbox"
+                          checked={editTagIds.includes(tag.id)}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setEditTagIds([...editTagIds, tag.id]);
+                            } else {
+                              setEditTagIds(
+                                editTagIds.filter((id) => id !== tag.id)
+                              );
+                            }
+                          }}
+                          className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                        />
+                        <span className="text-sm text-black">{tag.name}</span>
+                      </label>
+                    ))}
+                  </div>
+                  {editTagIds.length > 0 && (
+                    <div className="mt-2">
+                      <span className="text-sm text-gray-600">
+                        Selected:{" "}
+                        {editTagIds
+                          .map((id) => tags.find((t) => t.id === id)?.name)
+                          .join(", ")}
+                      </span>
+                    </div>
+                  )}
                 </div>
 
                 {/* Meta Title */}
