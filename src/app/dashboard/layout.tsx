@@ -13,6 +13,7 @@ import {
   FaChevronLeft,
   FaChevronRight,
   FaSignOutAlt,
+  FaUsers,
 } from "react-icons/fa";
 
 export default function DashboardLayout({
@@ -33,6 +34,7 @@ export default function DashboardLayout({
     { name: "Add Blog", href: "/dashboard/blog", icon: FaEdit },
     { name: "Add Tag", href: "/dashboard/tags", icon: FaTags },
     { name: "Categories", href: "/dashboard/categories", icon: FaFileAlt },
+    { name: "Waitlist", href: "/dashboard/waitlist", icon: FaUsers },
   ];
 
   return (

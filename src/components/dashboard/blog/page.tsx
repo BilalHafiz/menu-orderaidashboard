@@ -109,8 +109,116 @@ export default function BlogPage() {
   };
 
   const insertHeading = (level: number) => {
-    const heading = `<h${level}>Heading ${level}</h${level}>\n\n`;
-    setContent(content + heading);
+    const textarea = document.getElementById("content") as HTMLTextAreaElement;
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const selectedText = content.substring(start, end);
+
+    // If text is selected, wrap it in heading tags
+    if (selectedText.trim()) {
+      const heading = `<h${level}>${selectedText}</h${level}>\n\n`;
+      const newContent =
+        content.substring(0, start) + heading + content.substring(end);
+      setContent(newContent);
+    } else {
+      // If no text selected, insert a heading template at cursor position
+      const heading = `<h${level}>Heading ${level}</h${level}>\n\n`;
+      const newContent =
+        content.substring(0, start) + heading + content.substring(end);
+      setContent(newContent);
+    }
+  };
+
+  const insertBulletPoint = () => {
+    const textarea = document.getElementById("content") as HTMLTextAreaElement;
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const selectedText = content.substring(start, end);
+
+    if (selectedText.trim()) {
+      // If text is selected, convert each line to a bullet point
+      const lines = selectedText.split("\n");
+      const bulletLines = lines
+        .map((line) => {
+          const trimmedLine = line.trim();
+          if (trimmedLine) {
+            // If line already starts with bullet, don't add another
+            if (
+              trimmedLine.startsWith("•") ||
+              trimmedLine.startsWith("-") ||
+              trimmedLine.startsWith("*")
+            ) {
+              return line; // Keep original formatting
+            }
+            return `• ${trimmedLine}`;
+          }
+          return "• "; // Empty line becomes bullet point
+        })
+        .join("\n");
+
+      const newContent =
+        content.substring(0, start) + bulletLines + content.substring(end);
+      setContent(newContent);
+    } else {
+      // If no text selected, insert a bullet point at cursor position
+      const bulletPoint = `• `;
+      const newContent =
+        content.substring(0, start) + bulletPoint + content.substring(end);
+      setContent(newContent);
+
+      // Update cursor position after insertion
+      setTimeout(() => {
+        textarea.focus();
+        textarea.setSelectionRange(
+          start + bulletPoint.length,
+          start + bulletPoint.length
+        );
+      }, 0);
+    }
+  };
+
+  const insertNumberedList = () => {
+    const textarea = document.getElementById("content") as HTMLTextAreaElement;
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const selectedText = content.substring(start, end);
+
+    if (selectedText.trim()) {
+      // If text is selected, convert each line to a numbered list
+      const lines = selectedText.split("\n");
+      const numberedLines = lines
+        .map((line, index) => {
+          const trimmedLine = line.trim();
+          if (trimmedLine) {
+            // If line already starts with number, don't add another
+            if (/^\d+\./.test(trimmedLine)) {
+              return line; // Keep original formatting
+            }
+            return `${index + 1}. ${trimmedLine}`;
+          }
+          return `${index + 1}. `; // Empty line becomes numbered item
+        })
+        .join("\n");
+
+      const newContent =
+        content.substring(0, start) + numberedLines + content.substring(end);
+      setContent(newContent);
+    } else {
+      // If no text selected, insert a numbered item at cursor position
+      const numberedItem = `1. `;
+      const newContent =
+        content.substring(0, start) + numberedItem + content.substring(end);
+      setContent(newContent);
+
+      // Update cursor position after insertion
+      setTimeout(() => {
+        textarea.focus();
+        textarea.setSelectionRange(
+          start + numberedItem.length,
+          start + numberedItem.length
+        );
+      }, 0);
+    }
   };
 
   const formatText = (format: string) => {
@@ -119,22 +227,36 @@ export default function BlogPage() {
     const end = textarea.selectionEnd;
     const selectedText = content.substring(start, end);
 
+    if (!selectedText.trim()) {
+      alert("Please select some text to format");
+      return;
+    }
+
     let formattedText = "";
     switch (format) {
       case "bold":
-        formattedText = `<strong>${selectedText || "Bold Text"}</strong>`;
+        formattedText = `<strong>${selectedText}</strong>`;
         break;
       case "italic":
-        formattedText = `<em>${selectedText || "Italic Text"}</em>`;
+        formattedText = `<em>${selectedText}</em>`;
         break;
       case "underline":
-        formattedText = `<u>${selectedText || "Underlined Text"}</u>`;
+        formattedText = `<u>${selectedText}</u>`;
         break;
     }
 
     const newContent =
       content.substring(0, start) + formattedText + content.substring(end);
     setContent(newContent);
+
+    // Update cursor position after formatting
+    setTimeout(() => {
+      textarea.focus();
+      textarea.setSelectionRange(
+        start + formattedText.length,
+        start + formattedText.length
+      );
+    }, 0);
   };
 
   const handleTagToggle = (tagId: string) => {
@@ -317,24 +439,63 @@ export default function BlogPage() {
                 <div className="flex gap-1">
                   <button
                     onClick={() => insertHeading(1)}
-                    className="px-2 py-1 text-xs bg-white border border-gray-300 rounded hover:bg-gray-100"
-                    title="Heading 1"
+                    className="px-2 py-1 text-xs bg-white border border-gray-300 rounded hover:bg-gray-100 font-bold"
+                    title="Heading 1 - Select text and click to make it H1"
                   >
                     H1
                   </button>
                   <button
                     onClick={() => insertHeading(2)}
-                    className="px-2 py-1 text-xs bg-white border border-gray-300 rounded hover:bg-gray-100"
-                    title="Heading 2"
+                    className="px-2 py-1 text-xs bg-white border border-gray-300 rounded hover:bg-gray-100 font-bold"
+                    title="Heading 2 - Select text and click to make it H2"
                   >
                     H2
                   </button>
                   <button
                     onClick={() => insertHeading(3)}
-                    className="px-2 py-1 text-xs bg-white border border-gray-300 rounded hover:bg-gray-100"
-                    title="Heading 3"
+                    className="px-2 py-1 text-xs bg-white border border-gray-300 rounded hover:bg-gray-100 font-bold"
+                    title="Heading 3 - Select text and click to make it H3"
                   >
                     H3
+                  </button>
+                  <button
+                    onClick={() => insertHeading(4)}
+                    className="px-2 py-1 text-xs bg-white border border-gray-300 rounded hover:bg-gray-100 font-bold"
+                    title="Heading 4 - Select text and click to make it H4"
+                  >
+                    H4
+                  </button>
+                  <button
+                    onClick={() => insertHeading(5)}
+                    className="px-2 py-1 text-xs bg-white border border-gray-300 rounded hover:bg-gray-100 font-bold"
+                    title="Heading 5 - Select text and click to make it H5"
+                  >
+                    H5
+                  </button>
+                  <button
+                    onClick={() => insertHeading(6)}
+                    className="px-2 py-1 text-xs bg-white border border-gray-300 rounded hover:bg-gray-100 font-bold"
+                    title="Heading 6 - Select text and click to make it H6"
+                  >
+                    H6
+                  </button>
+                </div>
+
+                {/* Lists */}
+                <div className="flex gap-1">
+                  <button
+                    onClick={insertBulletPoint}
+                    className="px-2 py-1 text-xs bg-white border border-gray-300 rounded hover:bg-gray-100"
+                    title="Bullet Point - Select text and click to make it a bullet point"
+                  >
+                    •
+                  </button>
+                  <button
+                    onClick={insertNumberedList}
+                    className="px-2 py-1 text-xs bg-white border border-gray-300 rounded hover:bg-gray-100"
+                    title="Numbered List - Select text and click to make it a numbered list"
+                  >
+                    1.
                   </button>
                 </div>
 
@@ -343,21 +504,21 @@ export default function BlogPage() {
                   <button
                     onClick={() => formatText("bold")}
                     className="px-2 py-1 text-xs bg-white border border-gray-300 rounded hover:bg-gray-100 font-bold"
-                    title="Bold"
+                    title="Bold - Select text and click to make it bold"
                   >
                     B
                   </button>
                   <button
                     onClick={() => formatText("italic")}
                     className="px-2 py-1 text-xs bg-white border border-gray-300 rounded hover:bg-gray-100 italic"
-                    title="Italic"
+                    title="Italic - Select text and click to make it italic"
                   >
                     I
                   </button>
                   <button
                     onClick={() => formatText("underline")}
                     className="px-2 py-1 text-xs bg-white border border-gray-300 rounded hover:bg-gray-100 underline"
-                    title="Underline"
+                    title="Underline - Select text and click to underline it"
                   >
                     U
                   </button>

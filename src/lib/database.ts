@@ -592,3 +592,77 @@ export const getBlogPostTags = async (blogPostId: string) => {
   if (error) throw error;
   return data;
 };
+
+// Waitlist Management
+export const getWaitlistEntries = async () => {
+  const { data, error } = await supabase
+    .from("waitlist")
+    .select("*")
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    console.error("getWaitlistEntries error:", error);
+    throw new Error(error.message || "Failed to load waitlist entries");
+  }
+  return data;
+};
+
+export const addWaitlistEntry = async (email: string) => {
+  const { data, error } = await supabase
+    .from("waitlist")
+    .insert({ email })
+    .select()
+    .single();
+
+  if (error) {
+    console.error("addWaitlistEntry error:", error);
+    throw new Error(error.message || "Failed to add waitlist entry");
+  }
+  return data;
+};
+
+export const addBulkWaitlistEntries = async (emails: string[]) => {
+  try {
+    // Filter out duplicates and invalid emails
+    const validEmails = emails
+      .map((email) => email.trim().toLowerCase())
+      .filter((email) => email && email.includes("@"))
+      .filter((email, index, array) => array.indexOf(email) === index);
+
+    if (validEmails.length === 0) {
+      throw new Error("No valid emails found");
+    }
+
+    // Insert all emails at once
+    const { data, error } = await supabase
+      .from("waitlist")
+      .insert(validEmails.map((email) => ({ email })))
+      .select();
+
+    if (error) {
+      console.error("addBulkWaitlistEntries error:", error);
+      throw new Error(error.message || "Failed to add bulk waitlist entries");
+    }
+
+    return {
+      success: true,
+      added: data?.length || 0,
+      total: validEmails.length,
+      data,
+    };
+  } catch (err: unknown) {
+    const errorMessage =
+      err instanceof Error ? err.message : "Unknown error occurred";
+    console.error("addBulkWaitlistEntries error:", err);
+    throw new Error(`Bulk upload failed: ${errorMessage}`);
+  }
+};
+
+export const deleteWaitlistEntry = async (id: string) => {
+  const { error } = await supabase.from("waitlist").delete().eq("id", id);
+
+  if (error) {
+    console.error("deleteWaitlistEntry error:", error);
+    throw new Error(error.message || "Failed to delete waitlist entry");
+  }
+};
