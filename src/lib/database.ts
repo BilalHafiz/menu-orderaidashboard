@@ -633,10 +633,42 @@ export const addBulkWaitlistEntries = async (emails: string[]) => {
       throw new Error("No valid emails found");
     }
 
-    // Insert all emails at once
+    // Check which emails already exist in the database
+    const { data: existingEmails, error: checkError } = await supabase
+      .from("waitlist")
+      .select("email")
+      .in("email", validEmails);
+
+    if (checkError) {
+      console.error("Error checking existing emails:", checkError);
+      throw new Error("Failed to check existing emails");
+    }
+
+    const existingEmailSet = new Set(
+      existingEmails?.map((item) => item.email) || []
+    );
+    const newEmails = validEmails.filter(
+      (email) => !existingEmailSet.has(email)
+    );
+    const duplicateEmails = validEmails.filter((email) =>
+      existingEmailSet.has(email)
+    );
+
+    if (newEmails.length === 0) {
+      return {
+        success: true,
+        added: 0,
+        total: validEmails.length,
+        duplicates: duplicateEmails.length,
+        message: `All ${validEmails.length} emails already exist in the waitlist`,
+        data: [],
+      };
+    }
+
+    // Insert only new emails
     const { data, error } = await supabase
       .from("waitlist")
-      .insert(validEmails.map((email) => ({ email })))
+      .insert(newEmails.map((email) => ({ email })))
       .select();
 
     if (error) {
@@ -648,6 +680,10 @@ export const addBulkWaitlistEntries = async (emails: string[]) => {
       success: true,
       added: data?.length || 0,
       total: validEmails.length,
+      duplicates: duplicateEmails.length,
+      message: `Added ${data?.length || 0} new emails. ${
+        duplicateEmails.length
+      } emails were already in the waitlist.`,
       data,
     };
   } catch (err: unknown) {

@@ -102,7 +102,17 @@ export default function WaitlistManagement() {
         }
 
         const result = await addBulkWaitlistEntries(emails);
-        setSuccess(`Successfully added ${result.added} emails to waitlist!`);
+
+        // Handle the response with duplicate information
+        if (result.duplicates && result.duplicates > 0) {
+          setSuccess(
+            result.message ||
+              `Added ${result.added} new emails. ${result.duplicates} emails were already in the waitlist.`
+          );
+        } else {
+          setSuccess(`Successfully added ${result.added} emails to waitlist!`);
+        }
+
         setCsvFile(null);
         setPreviewData([]);
         loadEntries(); // Refresh the list
